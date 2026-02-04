@@ -9,18 +9,22 @@ import (
 
 func HelmCLI() schema.Executable {
 	return schema.Executable{
-		Name:    "Helm with SOPS Secrets",
+		Name:    "Helm with SOPS Secrets and Kubernetes",
 		Runs:    []string{"helm"},
 		DocsURL: sdk.URL("https://github.com/jkroepke/helm-secrets"),
 		NeedsAuth: needsauth.IfAll(
 			needsauth.NotForHelpOrVersion(),
 			needsauth.NotWithoutArgs(),
-			// Only authenticate when using helm-secrets plugin
-			needsauth.ForCommand("secrets"),
 		),
 		Uses: []schema.CredentialUsage{
 			{
 				Name: credname.SecretKey,
+				// SOPS age key - provisions SOPS_AGE_KEY env var
+			},
+			{
+				Name:   sdk.CredentialName("Kubeconfig"),
+				Plugin: "kubernetes",
+				// Kubeconfig - provisions KUBECONFIG env var pointing to temp file
 			},
 		},
 	}
