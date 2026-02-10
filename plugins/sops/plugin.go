@@ -17,8 +17,6 @@ func New() schema.Plugin {
 		},
 		Executables: []schema.Executable{
 			SOPSCLI(),
-			HelmCLI(),
-			HelmfileCLI(),
 		},
 	}
 }
