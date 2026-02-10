@@ -4,6 +4,7 @@ import (
 	"github.com/1Password/shell-plugins/sdk"
 	"github.com/1Password/shell-plugins/sdk/needsauth"
 	"github.com/1Password/shell-plugins/sdk/schema"
+	"github.com/1Password/shell-plugins/sdk/schema/credname"
 )
 
 func HelmfileCLI() schema.Executable {
@@ -16,9 +17,8 @@ func HelmfileCLI() schema.Executable {
 			needsauth.NotWithoutArgs(),
 		),
 		Uses: []schema.CredentialUsage{
-			{
-				Name: sdk.CredentialName("Helm Credentials"),
-			},
+			{Name: sdk.CredentialName("Kubeconfig")},
+			{Name: credname.SecretKey, Plugin: "sops", Optional: true},
 		},
 	}
 }

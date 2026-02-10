@@ -10,13 +10,13 @@ import (
 	"github.com/1Password/shell-plugins/sdk/schema/fieldname"
 )
 
-type helmCredentialsProvisioner struct{}
+type helmKubeconfigProvisioner struct{}
 
-func (p *helmCredentialsProvisioner) Description() string {
-	return "Provision kubeconfig file and optional SOPS age key for Helm"
+func (p *helmKubeconfigProvisioner) Description() string {
+	return "Provision kubeconfig file for Helm"
 }
 
-func (p *helmCredentialsProvisioner) Provision(ctx context.Context, in sdk.ProvisionInput, out *sdk.ProvisionOutput) {
+func (p *helmKubeconfigProvisioner) Provision(ctx context.Context, in sdk.ProvisionInput, out *sdk.ProvisionOutput) {
 	// Decode base64 kubeconfig
 	encoded := in.ItemFields[fieldname.Credential]
 	decoded, err := base64.StdEncoding.DecodeString(encoded)
@@ -33,14 +33,9 @@ func (p *helmCredentialsProvisioner) Provision(ctx context.Context, in sdk.Provi
 		return
 	}
 	out.AddEnvVar("KUBECONFIG", configPath)
-
-	// Optionally provision SOPS age key
-	if ageKey, ok := in.ItemFields[fieldname.PrivateKey]; ok && ageKey != "" {
-		out.AddEnvVar("SOPS_AGE_KEY", ageKey)
-	}
 }
 
-func (p *helmCredentialsProvisioner) Deprovision(ctx context.Context, in sdk.DeprovisionInput, out *sdk.DeprovisionOutput) {
+func (p *helmKubeconfigProvisioner) Deprovision(ctx context.Context, in sdk.DeprovisionInput, out *sdk.DeprovisionOutput) {
 	// Remove kubeconfig written directly to disk
 	configPath := filepath.Join(in.TempDir, "config")
 	os.Remove(configPath)

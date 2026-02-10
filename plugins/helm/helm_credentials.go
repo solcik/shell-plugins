@@ -10,9 +10,9 @@ import (
 	"github.com/1Password/shell-plugins/sdk/schema/fieldname"
 )
 
-func HelmCredentials() schema.CredentialType {
+func Kubeconfig() schema.CredentialType {
 	return schema.CredentialType{
-		Name:    sdk.CredentialName("Helm Credentials"),
+		Name:    sdk.CredentialName("Kubeconfig"),
 		DocsURL: sdk.URL("https://helm.sh/docs/"),
 		Fields: []schema.CredentialField{
 			{
@@ -20,24 +20,10 @@ func HelmCredentials() schema.CredentialType {
 				MarkdownDescription: "Base64-encoded kubeconfig YAML file contents.",
 				Secret:              true,
 			},
-			{
-				Name:                fieldname.PrivateKey,
-				MarkdownDescription: "Age secret key used by SOPS for encryption and decryption.",
-				Secret:              true,
-				Optional:            true,
-				Composition: &schema.ValueComposition{
-					Prefix: "AGE-SECRET-KEY-",
-					Charset: schema.Charset{
-						Uppercase: true,
-						Digits:    true,
-					},
-				},
-			},
 		},
-		DefaultProvisioner: &helmCredentialsProvisioner{},
+		DefaultProvisioner: &helmKubeconfigProvisioner{},
 		Importer: importer.TryAll(
 			TryKubeconfigFile(),
-			TryAgeKeyEnvVar(),
 		),
 	}
 }
@@ -51,11 +37,5 @@ func TryKubeconfigFile() sdk.Importer {
 			},
 			NameHint: importer.SanitizeNameHint("default"),
 		})
-	})
-}
-
-func TryAgeKeyEnvVar() sdk.Importer {
-	return importer.TryEnvVarPair(map[string]sdk.FieldName{
-		"SOPS_AGE_KEY": fieldname.PrivateKey,
 	})
 }

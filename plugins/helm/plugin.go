@@ -13,7 +13,7 @@ func New() schema.Plugin {
 			Homepage: sdk.URL("https://helm.sh"),
 		},
 		Credentials: []schema.CredentialType{
-			HelmCredentials(),
+			Kubeconfig(),
 		},
 		Executables: []schema.Executable{
 			HelmCLI(),
