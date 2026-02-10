@@ -25,6 +25,7 @@ import (
 	"github.com/1Password/shell-plugins/plugins/github"
 	"github.com/1Password/shell-plugins/plugins/gitlab"
 	"github.com/1Password/shell-plugins/plugins/hcloud"
+	"github.com/1Password/shell-plugins/plugins/helm"
 	"github.com/1Password/shell-plugins/plugins/heroku"
 	"github.com/1Password/shell-plugins/plugins/homebrew"
 	"github.com/1Password/shell-plugins/plugins/huggingface"
@@ -91,6 +92,7 @@ func init() {
 	Register(github.New())
 	Register(gitlab.New())
 	Register(hcloud.New())
+	Register(helm.New())
 	Register(heroku.New())
 	Register(homebrew.New())
 	Register(huggingface.New())
