@@ -9,12 +9,12 @@ import (
 	"github.com/1Password/shell-plugins/sdk/schema/fieldname"
 )
 
-func TestHelmCredentialsProvisioner(t *testing.T) {
+func TestKubeconfigProvisioner(t *testing.T) {
 	rawConfig := plugintest.LoadFixture(t, "config")
 	encodedConfig := base64.StdEncoding.EncodeToString([]byte(rawConfig))
 
-	plugintest.TestProvisioner(t, HelmCredentials().DefaultProvisioner, map[string]plugintest.ProvisionCase{
-		"kubeconfig only": {
+	plugintest.TestProvisioner(t, Kubeconfig().DefaultProvisioner, map[string]plugintest.ProvisionCase{
+		"kubeconfig": {
 			ItemFields: map[sdk.FieldName]string{
 				fieldname.Credential: encodedConfig,
 			},
@@ -24,26 +24,14 @@ func TestHelmCredentialsProvisioner(t *testing.T) {
 				},
 			},
 		},
-		"kubeconfig and sops age key": {
-			ItemFields: map[sdk.FieldName]string{
-				fieldname.Credential: encodedConfig,
-				fieldname.PrivateKey: "AGE-SECRET-KEY-1QFWENTHXAAPACFPMXHQCREP64GJE5YTHXLX0RPFSXRSPDJGCR0SSWYNX3D",
-			},
-			ExpectedOutput: sdk.ProvisionOutput{
-				Environment: map[string]string{
-					"KUBECONFIG":   "/tmp/config",
-					"SOPS_AGE_KEY": "AGE-SECRET-KEY-1QFWENTHXAAPACFPMXHQCREP64GJE5YTHXLX0RPFSXRSPDJGCR0SSWYNX3D",
-				},
-			},
-		},
 	})
 }
 
-func TestHelmCredentialsImporter(t *testing.T) {
+func TestKubeconfigImporter(t *testing.T) {
 	rawConfig := plugintest.LoadFixture(t, "config")
 	encodedConfig := base64.StdEncoding.EncodeToString([]byte(rawConfig))
 
-	plugintest.TestImporter(t, HelmCredentials().Importer, map[string]plugintest.ImportCase{
+	plugintest.TestImporter(t, Kubeconfig().Importer, map[string]plugintest.ImportCase{
 		"kubeconfig file": {
 			Files: map[string]string{
 				"~/.kube/config": rawConfig,
@@ -54,18 +42,6 @@ func TestHelmCredentialsImporter(t *testing.T) {
 						fieldname.Credential: encodedConfig,
 					},
 					NameHint: "",
-				},
-			},
-		},
-		"age key environment": {
-			Environment: map[string]string{
-				"SOPS_AGE_KEY": "AGE-SECRET-KEY-1QFWENTHXAAPACFPMXHQCREP64GJE5YTHXLX0RPFSXRSPDJGCR0SSWYNX3D",
-			},
-			ExpectedCandidates: []sdk.ImportCandidate{
-				{
-					Fields: map[sdk.FieldName]string{
-						fieldname.PrivateKey: "AGE-SECRET-KEY-1QFWENTHXAAPACFPMXHQCREP64GJE5YTHXLX0RPFSXRSPDJGCR0SSWYNX3D",
-					},
 				},
 			},
 		},
