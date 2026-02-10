@@ -3,6 +3,7 @@ package helm
 import (
 	"context"
 	"encoding/base64"
+	"os"
 	"path/filepath"
 
 	"github.com/1Password/shell-plugins/sdk"
@@ -16,7 +17,7 @@ func (p *helmCredentialsProvisioner) Description() string {
 }
 
 func (p *helmCredentialsProvisioner) Provision(ctx context.Context, in sdk.ProvisionInput, out *sdk.ProvisionOutput) {
-	// Decode base64 kubeconfig and write to temp file
+	// Decode base64 kubeconfig
 	encoded := in.ItemFields[fieldname.Credential]
 	decoded, err := base64.StdEncoding.DecodeString(encoded)
 	if err != nil {
@@ -24,8 +25,13 @@ func (p *helmCredentialsProvisioner) Provision(ctx context.Context, in sdk.Provi
 		return
 	}
 
+	// Write kubeconfig as a real file (not via out.AddSecretFile which creates a FIFO).
+	// Helm reads the kubeconfig multiple times, and FIFOs block on the second read.
 	configPath := filepath.Join(in.TempDir, "config")
-	out.AddSecretFile(configPath, decoded)
+	if err := os.WriteFile(configPath, decoded, 0600); err != nil {
+		out.AddError(err)
+		return
+	}
 	out.AddEnvVar("KUBECONFIG", configPath)
 
 	// Optionally provision SOPS age key
@@ -35,5 +41,7 @@ func (p *helmCredentialsProvisioner) Provision(ctx context.Context, in sdk.Provi
 }
 
 func (p *helmCredentialsProvisioner) Deprovision(ctx context.Context, in sdk.DeprovisionInput, out *sdk.DeprovisionOutput) {
-	// Temp files are automatically cleaned up
+	// Remove kubeconfig written directly to disk
+	configPath := filepath.Join(in.TempDir, "config")
+	os.Remove(configPath)
 }
