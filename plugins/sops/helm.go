@@ -18,13 +18,14 @@ func HelmCLI() schema.Executable {
 		),
 		Uses: []schema.CredentialUsage{
 			{
-				Name: credname.SecretKey,
-				// SOPS age key - provisions SOPS_AGE_KEY env var
-			},
-			{
 				Name:   sdk.CredentialName("Kubeconfig"),
 				Plugin: "kubernetes",
 				// Kubeconfig - provisions KUBECONFIG env var pointing to temp file
+			},
+			{
+				Name:     credname.SecretKey,
+				Optional: true,
+				// SOPS age key - provisions SOPS_AGE_KEY env var (optional, only for helm-secrets)
 			},
 		},
 	}
