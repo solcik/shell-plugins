@@ -22,11 +22,6 @@ func TestHelmCredentialsProvisioner(t *testing.T) {
 				Environment: map[string]string{
 					"KUBECONFIG": "/tmp/config",
 				},
-				Files: map[string]sdk.OutputFile{
-					"/tmp/config": {
-						Contents: []byte(rawConfig),
-					},
-				},
 			},
 		},
 		"kubeconfig and sops age key": {
@@ -38,11 +33,6 @@ func TestHelmCredentialsProvisioner(t *testing.T) {
 				Environment: map[string]string{
 					"KUBECONFIG":   "/tmp/config",
 					"SOPS_AGE_KEY": "AGE-SECRET-KEY-1QFWENTHXAAPACFPMXHQCREP64GJE5YTHXLX0RPFSXRSPDJGCR0SSWYNX3D",
-				},
-				Files: map[string]sdk.OutputFile{
-					"/tmp/config": {
-						Contents: []byte(rawConfig),
-					},
 				},
 			},
 		},
