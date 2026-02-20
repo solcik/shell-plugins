@@ -41,6 +41,14 @@ func TestHelp(t *testing.T) {
 			Args:              []string{"foo"},
 			ExpectedNeedsAuth: true,
 		},
+		"yes when -h appears after -- separator": {
+			Args:              []string{"exec", "pod", "--", "df", "-h"},
+			ExpectedNeedsAuth: true,
+		},
+		"yes when --help appears after -- separator": {
+			Args:              []string{"exec", "pod", "--", "cmd", "--help"},
+			ExpectedNeedsAuth: true,
+		},
 	})
 }
 
@@ -60,6 +68,10 @@ func TestVersion(t *testing.T) {
 		},
 		"yes when -v is part of a command": {
 			Args:              []string{"run", "-v", "$PWD:/app", "foo"},
+			ExpectedNeedsAuth: true,
+		},
+		"yes when -v appears after -- separator": {
+			Args:              []string{"exec", "pod", "--", "cmd", "-v"},
 			ExpectedNeedsAuth: true,
 		},
 	})
@@ -82,6 +94,10 @@ func TestContainsArgs(t *testing.T) {
 		"no when all args are present in sequence": {
 			Args:              []string{"deploy", "--mode", "dry-run"},
 			ExpectedNeedsAuth: false,
+		},
+		"yes when arg sequence appears after -- separator": {
+			Args:              []string{"exec", "pod", "--", "--mode", "dry-run"},
+			ExpectedNeedsAuth: true,
 		},
 	})
 }
@@ -191,4 +207,46 @@ func TestComplexChain(t *testing.T) {
 			ExpectedNeedsAuth: false,
 		},
 	})
+}
+
+func TestArgsBeforeSeparator(t *testing.T) {
+	tests := map[string]struct {
+		input    []string
+		expected []string
+	}{
+		"no separator": {
+			input:    []string{"exec", "pod", "-it"},
+			expected: []string{"exec", "pod", "-it"},
+		},
+		"with separator": {
+			input:    []string{"exec", "pod", "--", "df", "-h"},
+			expected: []string{"exec", "pod"},
+		},
+		"separator at start": {
+			input:    []string{"--", "df", "-h"},
+			expected: []string{},
+		},
+		"empty args": {
+			input:    []string{},
+			expected: []string{},
+		},
+		"only separator": {
+			input:    []string{"--"},
+			expected: []string{},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := argsBeforeSeparator(tc.input)
+			if len(got) != len(tc.expected) {
+				t.Fatalf("expected %v, got %v", tc.expected, got)
+			}
+			for i := range got {
+				if got[i] != tc.expected[i] {
+					t.Fatalf("expected %v, got %v", tc.expected, got)
+				}
+			}
+		})
+	}
 }

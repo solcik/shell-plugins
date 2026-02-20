@@ -58,15 +58,26 @@ func Always() sdk.NeedsAuthentication {
 	}
 }
 
+// argsBeforeSeparator returns args up to (but not including) the first "--" separator.
+func argsBeforeSeparator(args []string) []string {
+	for i, arg := range args {
+		if arg == "--" {
+			return args[:i]
+		}
+	}
+	return args
+}
+
 // NotForExactArgs returns a NeedsAuthentication rule to opt out of authentication when
 // the command-line args are an exact match with the passed in args.
 func NotForExactArgs(argsToSkip ...string) sdk.NeedsAuthentication {
 	return func(in sdk.NeedsAuthenticationInput) bool {
-		if len(in.CommandArgs) != len(argsToSkip) {
+		args := argsBeforeSeparator(in.CommandArgs)
+		if len(args) != len(argsToSkip) {
 			return true
 		}
 
-		for i, commandArg := range in.CommandArgs {
+		for i, commandArg := range args {
 			if commandArg != argsToSkip[i] {
 				return true
 			}
@@ -80,21 +91,22 @@ func NotForExactArgs(argsToSkip ...string) sdk.NeedsAuthentication {
 // the exact sequence of argsToSkip is present somewhere in the command-line args.
 func NotWhenContainsArgs(argsSequence ...string) sdk.NeedsAuthentication {
 	return func(in sdk.NeedsAuthenticationInput) bool {
+		args := argsBeforeSeparator(in.CommandArgs)
 		if len(argsSequence) == 0 {
 			return true
 		}
 
-		if len(argsSequence) > len(in.CommandArgs) {
+		if len(argsSequence) > len(args) {
 			return true
 		}
 
-		for i := range in.CommandArgs {
-			if i+len(argsSequence) > len(in.CommandArgs) {
+		for i := range args {
+			if i+len(argsSequence) > len(args) {
 				return true
 			}
 
 			matches := true
-			for i, argsToCompare := range in.CommandArgs[i : i+len(argsSequence)] {
+			for i, argsToCompare := range args[i : i+len(argsSequence)] {
 				if argsToCompare != argsSequence[i] {
 					matches = false
 				}
