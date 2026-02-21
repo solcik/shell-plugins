@@ -19,6 +19,7 @@ func HelmCLI() schema.Executable {
 		Uses: []schema.CredentialUsage{
 			{Name: sdk.CredentialName("Kubeconfig")},
 			{Name: credname.SecretKey, Plugin: "sops", Optional: true},
+			{Name: credname.PersonalAccessToken, Plugin: "digitalocean", Optional: true},
 		},
 	}
 }
