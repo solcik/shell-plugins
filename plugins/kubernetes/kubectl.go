@@ -4,6 +4,7 @@ import (
 	"github.com/1Password/shell-plugins/sdk"
 	"github.com/1Password/shell-plugins/sdk/needsauth"
 	"github.com/1Password/shell-plugins/sdk/schema"
+	"github.com/1Password/shell-plugins/sdk/schema/credname"
 )
 
 func KubectlCLI() schema.Executable {
@@ -16,9 +17,8 @@ func KubectlCLI() schema.Executable {
 			needsauth.NotWithoutArgs(),
 		),
 		Uses: []schema.CredentialUsage{
-			{
-				Name: sdk.CredentialName("Kubeconfig"),
-			},
+			{Name: sdk.CredentialName("Kubeconfig")},
+			{Name: credname.PersonalAccessToken, Plugin: "digitalocean", Optional: true},
 		},
 	}
 }
