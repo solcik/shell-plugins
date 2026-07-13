@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 
 	"github.com/1Password/shell-plugins/sdk"
 	"github.com/1Password/shell-plugins/sdk/schema/fieldname"
@@ -15,7 +14,13 @@ import (
 // `az login --service-principal` against a temporary AZURE_CONFIG_DIR.
 // The az CLI has no environment-variable credential support, so login state
 // must live in a config dir; using a throwaway one keeps the user's ~/.azure
-// untouched and leaves no credentials behind outside the plugin temp dir.
+// untouched.
+//
+// Cleanup cannot rely on Deprovision: op never calls it for local plugins.
+// Instead the config dir is created under XDG_RUNTIME_DIR (tmpfs, 0700,
+// wiped at logout) and the executed command line is wrapped in a shell trap
+// that removes the dir the moment the CLI exits, so the provisioned tokens
+// never outlive the invocation.
 type azureConfigDirProvisioner struct{}
 
 func (p *azureConfigDirProvisioner) Description() string {
@@ -23,8 +28,15 @@ func (p *azureConfigDirProvisioner) Description() string {
 }
 
 func (p *azureConfigDirProvisioner) Provision(ctx context.Context, in sdk.ProvisionInput, out *sdk.ProvisionOutput) {
-	configDir := filepath.Join(in.TempDir, "azure")
-	if err := os.MkdirAll(configDir, 0700); err != nil {
+	// Prefer XDG_RUNTIME_DIR over op's TempDir under /tmp: op does not clean
+	// TempDir for local plugins, while the runtime dir is tmpfs and dies with
+	// the session even if the self-destruct wrapper is skipped (SIGKILL).
+	parent := os.Getenv("XDG_RUNTIME_DIR")
+	if parent == "" {
+		parent = in.TempDir
+	}
+	configDir, err := os.MkdirTemp(parent, "op-azure-")
+	if err != nil {
 		out.AddError(err)
 		return
 	}
@@ -37,6 +49,7 @@ func (p *azureConfigDirProvisioner) Provision(ctx context.Context, in sdk.Provis
 		"--output", "none", "--only-show-errors")
 	login.Env = env
 	if output, err := login.CombinedOutput(); err != nil {
+		os.RemoveAll(configDir)
 		out.AddError(fmt.Errorf("az login failed: %w: %s", err, output))
 		return
 	}
@@ -46,16 +59,27 @@ func (p *azureConfigDirProvisioner) Provision(ctx context.Context, in sdk.Provis
 			"--subscription", subscription, "--only-show-errors")
 		set.Env = env
 		if output, err := set.CombinedOutput(); err != nil {
+			os.RemoveAll(configDir)
 			out.AddError(fmt.Errorf("az account set failed: %w: %s", err, output))
 			return
 		}
 	}
 
 	out.AddEnvVar("AZURE_CONFIG_DIR", configDir)
+	out.CommandLine = selfDestructCommandLine(out.CommandLine, configDir)
 }
 
 func (p *azureConfigDirProvisioner) Deprovision(ctx context.Context, in sdk.DeprovisionInput, out *sdk.DeprovisionOutput) {
-	// Best effort: op doesn't call Deprovision for local plugins; the temp dir
-	// is cleaned up externally (tmpfiles rule on /tmp/1PasswordShellPlugins-*).
-	os.RemoveAll(filepath.Join(in.TempDir, "azure"))
+	// Never called by op for local plugins; cleanup is handled by the
+	// self-destruct command wrapper set in Provision.
+}
+
+// selfDestructCommandLine wraps the command op is about to execute in a shell
+// that removes dir as soon as the command exits, preserving its exit status.
+func selfDestructCommandLine(commandLine []string, dir string) []string {
+	if len(commandLine) == 0 {
+		return commandLine
+	}
+	script := fmt.Sprintf(`trap 'rm -rf -- %q' EXIT; "$@"`, dir)
+	return append([]string{"/bin/sh", "-c", script, "--"}, commandLine...)
 }
