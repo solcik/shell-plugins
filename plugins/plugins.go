@@ -15,14 +15,23 @@ import (
 	"github.com/1Password/shell-plugins/plugins/cargo"
 	"github.com/1Password/shell-plugins/plugins/circleci"
 	"github.com/1Password/shell-plugins/plugins/civo"
+	"github.com/1Password/shell-plugins/plugins/cline"
 	"github.com/1Password/shell-plugins/plugins/confluent"
+	"github.com/1Password/shell-plugins/plugins/copilot"
+	"github.com/1Password/shell-plugins/plugins/cratedb"
 	"github.com/1Password/shell-plugins/plugins/crowdin"
+	"github.com/1Password/shell-plugins/plugins/cursor"
 	"github.com/1Password/shell-plugins/plugins/databricks"
 	"github.com/1Password/shell-plugins/plugins/datadog"
+	"github.com/1Password/shell-plugins/plugins/descope"
 	"github.com/1Password/shell-plugins/plugins/digitalocean"
+	"github.com/1Password/shell-plugins/plugins/doppler"
+	"github.com/1Password/shell-plugins/plugins/exercism"
+	"github.com/1Password/shell-plugins/plugins/expo"
 	"github.com/1Password/shell-plugins/plugins/fastly"
 	"github.com/1Password/shell-plugins/plugins/flyctl"
 	"github.com/1Password/shell-plugins/plugins/fossa"
+	"github.com/1Password/shell-plugins/plugins/gemini"
 	"github.com/1Password/shell-plugins/plugins/gitea"
 	"github.com/1Password/shell-plugins/plugins/github"
 	"github.com/1Password/shell-plugins/plugins/gitlab"
@@ -32,7 +41,9 @@ import (
 	"github.com/1Password/shell-plugins/plugins/homebrew"
 	"github.com/1Password/shell-plugins/plugins/huggingface"
 	"github.com/1Password/shell-plugins/plugins/influxdb"
+	"github.com/1Password/shell-plugins/plugins/junie"
 	"github.com/1Password/shell-plugins/plugins/kaggle"
+	"github.com/1Password/shell-plugins/plugins/kiro"
 	"github.com/1Password/shell-plugins/plugins/kubernetes"
 	"github.com/1Password/shell-plugins/plugins/lacework"
 	"github.com/1Password/shell-plugins/plugins/laravelforge"
@@ -44,11 +55,14 @@ import (
 	"github.com/1Password/shell-plugins/plugins/ohdear"
 	"github.com/1Password/shell-plugins/plugins/okta"
 	"github.com/1Password/shell-plugins/plugins/openai"
+	"github.com/1Password/shell-plugins/plugins/opencode"
 	"github.com/1Password/shell-plugins/plugins/pipedream"
 	"github.com/1Password/shell-plugins/plugins/postgresql"
 	"github.com/1Password/shell-plugins/plugins/pulumi"
 	"github.com/1Password/shell-plugins/plugins/pypi"
 	"github.com/1Password/shell-plugins/plugins/readme"
+	"github.com/1Password/shell-plugins/plugins/redis"
+	"github.com/1Password/shell-plugins/plugins/rediscloud"
 	"github.com/1Password/shell-plugins/plugins/scaleway"
 	"github.com/1Password/shell-plugins/plugins/sentry"
 	"github.com/1Password/shell-plugins/plugins/snowflake"
@@ -58,9 +72,11 @@ import (
 	"github.com/1Password/shell-plugins/plugins/stripe"
 	"github.com/1Password/shell-plugins/plugins/terraform"
 	"github.com/1Password/shell-plugins/plugins/todoist"
+	"github.com/1Password/shell-plugins/plugins/tofu"
 	"github.com/1Password/shell-plugins/plugins/treasuredata"
 	"github.com/1Password/shell-plugins/plugins/tugboat"
 	"github.com/1Password/shell-plugins/plugins/twilio"
+	"github.com/1Password/shell-plugins/plugins/upcloud"
 	"github.com/1Password/shell-plugins/plugins/upstash"
 	"github.com/1Password/shell-plugins/plugins/vault"
 	"github.com/1Password/shell-plugins/plugins/vercel"
@@ -85,14 +101,23 @@ func init() {
 	Register(cargo.New())
 	Register(circleci.New())
 	Register(civo.New())
+	Register(cline.New())
 	Register(confluent.New())
+	Register(copilot.New())
+	Register(cratedb.New())
 	Register(crowdin.New())
+	Register(cursor.New())
 	Register(databricks.New())
 	Register(datadog.New())
+	Register(descope.New())
 	Register(digitalocean.New())
+	Register(doppler.New())
+	Register(exercism.New())
+	Register(expo.New())
 	Register(fastly.New())
 	Register(flyctl.New())
 	Register(fossa.New())
+	Register(gemini.New())
 	Register(gitea.New())
 	Register(github.New())
 	Register(gitlab.New())
@@ -102,7 +127,9 @@ func init() {
 	Register(homebrew.New())
 	Register(huggingface.New())
 	Register(influxdb.New())
+	Register(junie.New())
 	Register(kaggle.New())
+	Register(kiro.New())
 	Register(kubernetes.New())
 	Register(lacework.New())
 	Register(laravelforge.New())
@@ -114,11 +141,14 @@ func init() {
 	Register(ohdear.New())
 	Register(okta.New())
 	Register(openai.New())
+	Register(opencode.New())
 	Register(pipedream.New())
 	Register(postgresql.New())
 	Register(pulumi.New())
 	Register(pypi.New())
 	Register(readme.New())
+	Register(redis.New())
+	Register(rediscloud.New())
 	Register(scaleway.New())
 	Register(sentry.New())
 	Register(snowflake.New())
@@ -128,9 +158,11 @@ func init() {
 	Register(stripe.New())
 	Register(terraform.New())
 	Register(todoist.New())
+	Register(tofu.New())
 	Register(treasuredata.New())
 	Register(tugboat.New())
 	Register(twilio.New())
+	Register(upcloud.New())
 	Register(upstash.New())
 	Register(vault.New())
 	Register(vercel.New())
