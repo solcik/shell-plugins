@@ -98,6 +98,11 @@ func ContainsLowercaseLettersOrDigits(str string) bool {
 func CredentialReferencesInCredentialList(plugin Plugin) bool {
 	for _, executable := range plugin.Executables {
 		for _, execCredential := range executable.Uses {
+			// Credentials referenced from another plugin are not expected in
+			// this plugin's credential list.
+			if execCredential.Plugin != "" && execCredential.Plugin != plugin.Name {
+				continue
+			}
 			if execCredential.Name != "" {
 				found := false
 				for _, credential := range plugin.Credentials {
