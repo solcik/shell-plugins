@@ -41,7 +41,11 @@ func (p *azureConfigDirProvisioner) Provision(ctx context.Context, in sdk.Provis
 		out.AddError(err)
 		return
 	}
-	env := append(os.Environ(), "AZURE_CONFIG_DIR="+configDir)
+	// Telemetry runs as a detached child that outlives az and re-creates the
+	// config dir after the self-destruct trap has removed it — disable it.
+	env := append(os.Environ(),
+		"AZURE_CONFIG_DIR="+configDir,
+		"AZURE_CORE_COLLECT_TELEMETRY=0")
 
 	login := exec.CommandContext(ctx, "az", "login", "--service-principal",
 		"--username", in.ItemFields[fieldname.ClientID],
@@ -67,6 +71,7 @@ func (p *azureConfigDirProvisioner) Provision(ctx context.Context, in sdk.Provis
 	}
 
 	out.AddEnvVar("AZURE_CONFIG_DIR", configDir)
+	out.AddEnvVar("AZURE_CORE_COLLECT_TELEMETRY", "0")
 	out.CommandLine = selfDestructCommandLine(out.CommandLine, configDir)
 }
 
