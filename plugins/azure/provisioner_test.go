@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 // Provision itself execs `az login`, so it can't run in tests; the
@@ -67,4 +68,35 @@ func TestSelfDestructCommandLine(t *testing.T) {
 			t.Fatalf("dir %q: expected unwrapped passthrough, got %v", unsafe, got)
 		}
 	}
+}
+
+// The reaper must remove the dir shortly after the watched process exits,
+// without any cooperation from the watched process itself.
+func TestSpawnReaper(t *testing.T) {
+	if _, err := os.Stat("/bin/sh"); err != nil {
+		t.Skip("/bin/sh not available")
+	}
+
+	dir := filepath.Join(t.TempDir(), "op-azure-reap")
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		t.Fatal(err)
+	}
+
+	// Stand-in for the op CLI: a short-lived process the reaper watches.
+	fakeOp := exec.Command("sleep", "0.3")
+	if err := fakeOp.Start(); err != nil {
+		t.Fatal(err)
+	}
+
+	spawnReaper(dir, fakeOp.Process.Pid)
+	_ = fakeOp.Wait()
+
+	deadline := time.Now().Add(3 * time.Second)
+	for time.Now().Before(deadline) {
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			return
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	t.Fatal("reaper did not remove dir after watched process exited")
 }

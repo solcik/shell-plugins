@@ -6,6 +6,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
+	"syscall"
 
 	"github.com/1Password/shell-plugins/sdk"
 	"github.com/1Password/shell-plugins/sdk/schema/fieldname"
@@ -72,7 +74,11 @@ func (p *azureConfigDirProvisioner) Provision(ctx context.Context, in sdk.Provis
 
 	out.AddEnvVar("AZURE_CONFIG_DIR", configDir)
 	out.AddEnvVar("AZURE_CORE_COLLECT_TELEMETRY", "0")
+	// The trap wrapper gives instant cleanup, but op drops CommandLine
+	// rewrites when merging multi-credential outputs, so the reaper is the
+	// guaranteed path.
 	out.CommandLine = selfDestructCommandLine(out.CommandLine, configDir)
+	spawnReaper(configDir, os.Getppid())
 }
 
 func (p *azureConfigDirProvisioner) Deprovision(ctx context.Context, in sdk.DeprovisionInput, out *sdk.DeprovisionOutput) {
@@ -95,4 +101,21 @@ func selfDestructCommandLine(commandLine []string, dir string) []string {
 		return commandLine
 	}
 	return append([]string{"/bin/sh", "-c", `trap 'rm -rf -- "$0"' EXIT; "$@"`, dir}, commandLine...)
+}
+
+// spawnReaper starts a detached watcher that removes dir once the process
+// with the given pid (the op CLI — this plugin's parent during Provision)
+// exits. It does not depend on op honoring CommandLine or calling
+// Deprovision, neither of which is guaranteed for local plugins.
+func spawnReaper(dir string, pid int) {
+	if !filepath.IsAbs(dir) || filepath.Clean(dir) == "/" || pid <= 1 {
+		return
+	}
+	cmd := exec.Command("/bin/sh", "-c",
+		`while kill -0 "$1" 2>/dev/null; do sleep 0.2; done; rm -rf -- "$0"`,
+		dir, strconv.Itoa(pid))
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+	// No Wait: the reaper must outlive this plugin process; once orphaned it
+	// is reparented to init, which reaps it.
+	_ = cmd.Start()
 }
