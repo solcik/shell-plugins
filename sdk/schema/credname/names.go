@@ -24,6 +24,7 @@ const (
 	PersonalAccessToken  = sdk.CredentialName("Personal Access Token")
 	RegistryCredentials  = sdk.CredentialName("Registry Credentials")
 	SecretKey            = sdk.CredentialName("Secret Key")
+	ServicePrincipal     = sdk.CredentialName("Service Principal")
 	UserLogin            = sdk.CredentialName("User Login")
 	UserCredentials      = sdk.CredentialName("User Credentials")
 )
@@ -49,6 +50,7 @@ func ListAll() []sdk.CredentialName {
 		PersonalAccessToken,
 		RegistryCredentials,
 		SecretKey,
+		ServicePrincipal,
 		UserLogin,
 		UserCredentials,
 	}

@@ -4,10 +4,12 @@ package plugins
 
 import (
 	"github.com/1Password/shell-plugins/plugins/akamai"
+	"github.com/1Password/shell-plugins/plugins/anthropic"
 	"github.com/1Password/shell-plugins/plugins/argocd"
 	"github.com/1Password/shell-plugins/plugins/atlas"
 	"github.com/1Password/shell-plugins/plugins/aws"
 	"github.com/1Password/shell-plugins/plugins/axiom"
+	"github.com/1Password/shell-plugins/plugins/azure"
 	"github.com/1Password/shell-plugins/plugins/binance"
 	"github.com/1Password/shell-plugins/plugins/cachix"
 	"github.com/1Password/shell-plugins/plugins/cargo"
@@ -45,6 +47,7 @@ import (
 	"github.com/1Password/shell-plugins/plugins/pipedream"
 	"github.com/1Password/shell-plugins/plugins/postgresql"
 	"github.com/1Password/shell-plugins/plugins/pulumi"
+	"github.com/1Password/shell-plugins/plugins/pypi"
 	"github.com/1Password/shell-plugins/plugins/readme"
 	"github.com/1Password/shell-plugins/plugins/scaleway"
 	"github.com/1Password/shell-plugins/plugins/sentry"
@@ -71,10 +74,12 @@ import (
 
 func init() {
 	Register(akamai.New())
+	Register(anthropic.New())
 	Register(argocd.New())
 	Register(atlas.New())
 	Register(aws.New())
 	Register(axiom.New())
+	Register(azure.New())
 	Register(binance.New())
 	Register(cachix.New())
 	Register(cargo.New())
@@ -112,6 +117,7 @@ func init() {
 	Register(pipedream.New())
 	Register(postgresql.New())
 	Register(pulumi.New())
+	Register(pypi.New())
 	Register(readme.New())
 	Register(scaleway.New())
 	Register(sentry.New())
