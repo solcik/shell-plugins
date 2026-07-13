@@ -20,7 +20,7 @@ func TestSelfDestructCommandLine(t *testing.T) {
 	}
 
 	wrapped := selfDestructCommandLine([]string{"true"}, dir)
-	if len(wrapped) != 5 || wrapped[0] != "/bin/sh" || wrapped[4] != "true" {
+	if len(wrapped) != 5 || wrapped[0] != "/bin/sh" || wrapped[3] != dir || wrapped[4] != "true" {
 		t.Fatalf("unexpected wrapped command line: %v", wrapped)
 	}
 
@@ -41,8 +41,30 @@ func TestSelfDestructCommandLine(t *testing.T) {
 		t.Fatalf("exit status not preserved, got %v", err)
 	}
 
-	// Empty command lines are passed through untouched.
+	// Hostile path bytes must neither break quoting nor execute: the dir is
+	// passed as $0, never interpolated into the script.
+	marker := filepath.Join(t.TempDir(), "pwned")
+	hostile := filepath.Join(t.TempDir(), `evil '$(touch `+marker+`) "dir`)
+	if err := os.MkdirAll(hostile, 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err := exec.Command("/bin/sh", selfDestructCommandLine([]string{"true"}, hostile)[1:]...).Run(); err != nil {
+		t.Fatalf("wrapped command with hostile dir failed: %v", err)
+	}
+	if _, err := os.Stat(hostile); !os.IsNotExist(err) {
+		t.Fatal("hostile-named dir still exists after wrapped command exited")
+	}
+	if _, err := os.Stat(marker); !os.IsNotExist(err) {
+		t.Fatal("shell injection executed: marker file created")
+	}
+
+	// Empty command lines and unsafe dirs are passed through untouched.
 	if got := selfDestructCommandLine(nil, dir); got != nil {
 		t.Fatalf("expected nil passthrough, got %v", got)
+	}
+	for _, unsafe := range []string{"/", "relative/path", ""} {
+		if got := selfDestructCommandLine([]string{"true"}, unsafe); len(got) != 1 || got[0] != "true" {
+			t.Fatalf("dir %q: expected unwrapped passthrough, got %v", unsafe, got)
+		}
 	}
 }

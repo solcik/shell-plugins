@@ -3,7 +3,6 @@ package helm
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -65,10 +64,17 @@ func (p *helmKubeconfigProvisioner) Deprovision(ctx context.Context, in sdk.Depr
 
 // selfDestructCommandLine wraps the command op is about to execute in a shell
 // that removes dir as soon as the command exits, preserving its exit status.
+// The dir is passed as $0 rather than interpolated into the script, so no
+// path byte (quote, $, backtick, space) can break quoting or inject shell
+// syntax into the trap.
 func selfDestructCommandLine(commandLine []string, dir string) []string {
 	if len(commandLine) == 0 {
 		return commandLine
 	}
-	script := fmt.Sprintf(`trap 'rm -rf -- %q' EXIT; "$@"`, dir)
-	return append([]string{"/bin/sh", "-c", script, "--"}, commandLine...)
+	// MkdirTemp guarantees an absolute, non-root path; guard anyway so the
+	// trap can never be wired up against "/" or a relative path.
+	if !filepath.IsAbs(dir) || filepath.Clean(dir) == "/" {
+		return commandLine
+	}
+	return append([]string{"/bin/sh", "-c", `trap 'rm -rf -- "$0"' EXIT; "$@"`, dir}, commandLine...)
 }
